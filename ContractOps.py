@@ -1,49 +1,136 @@
-from http.client import NON_AUTHORITATIVE_INFORMATION
 from web3 import Web3
 import os
+from solcx import compile_standard, install_solc
+import json
+from functools import wraps
+
+install_solc("0.6.0")
 
 
-class ContractOps():
+class ContractOps:
     def __init__(self, provider_key):
         # "RINKEBY_RPC_URL"
         self.w3 = Web3(Web3.HTTPProvider(os.getenv(provider_key)))
-        self.nonce = self.w3.eth.get_transaction_count()
+        self.nonce = 0
 
-    def CreateContract(self, abi, bytecode):
+    def compile(self, file_path, isJsonDump=False):
+        with open(file_path, "r") as file:
+            file_contents = file.read()
+
+        compiled_sol = compile_standard(
+            {
+                "language": "Solidity",
+                "sources": {"SimpleStorage.sol": {"content": file_contents}},
+                "settings": {
+                    "outputSelection": {
+                        "*": {
+                            "*": [
+                                "abi",
+                                "metadata",
+                                "evm.bytecode",
+                                "evm.bytecode.sourceMap",
+                            ]
+                        }
+                    }
+                },
+            },
+            solc_version="0.6.0",
+        )
+
+        # get bytecode
+        bytecode = compiled_sol["contracts"]["SimpleStorage.sol"]["SimpleStorage"][
+            "evm"
+        ]["bytecode"]["object"]
+
+        # get abi
+        abi = json.loads(
+            compiled_sol["contracts"]["SimpleStorage.sol"]["SimpleStorage"]["metadata"]
+        )["output"]["abi"]
+
+        if isJsonDump:
+            with open("compiled_code.json", "w") as file:
+                json.dump(compiled_sol, file)
+
+        return (abi, bytecode)
+
+    def createContract(self, abi, bytecode):
         return self.w3.eth.contract(abi=abi, bytecode=bytecode)
 
-    def IncrementNonce(self):
+    def incrementNonce(self):
         self.nonce += 1
 
-    def DecrementNonce(self):
+    def decrementNonce(self):
         self.nonce -= 1
 
-    def createTxn(self, contract, chain_id, from_address, to_address=None, gas_price=None, txn_address=None, txn_abi=None):
+    def createTxn(
+        self,
+        from_address=None,
+        chain_id=None,
+        contract=None,
+        to_address=None,
+        gas_price=None,
+        contract_address=None,
+        contract_abi=None,
+    ):
+        self.nonce = self.w3.eth.get_transaction_count(from_address)
+        if contract_address is None:
+            return self.buildTransaction(
+                chain_id,
+                from_address,
+                contract,
+                to_address,
+                gas_price,
+            )
+        else:
+            return self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+    def buildTransaction(
+        self,
+        chain_id,
+        from_address,
+        contract=None,
+        to_address=None,
+        gas_price=None,
+        contract_function=None,
+    ):
         build_transaction_parameters = {
-            "chain_id": chain_id,
+            "chainId": chain_id,
             "nonce": self.nonce,
-            "from_address": from_address,
-            "gas_price": self.w3.eth.gas_price
+            "from": from_address,
+            "gasPrice": self.w3.eth.gas_price,
         }
 
         if to_address is not None:
-            build_transaction_parameters["to_address"] = to_address
+            build_transaction_parameters["to"] = to_address
 
         if gas_price is not None:
-            build_transaction_parameters["gas_price"] = gas_price
+            build_transaction_parameters["gasPrice"] = gas_price
 
-        try:
-            self.IncrementNonce()
-            if txn_address == None:
-                return contract.constructor.buildTransaction(build_transaction_parameters)
-            else:
-                return self.w3.eth.contract(address=txn_address, abi=txn_abi)
-        except:
-            self.DecrementNonce()
+        if contract_function is not None:  # call a function inside a contract
+            return self._buildTransactionFunction(
+                contract_function, build_transaction_parameters
+            )
 
-    def SignTransaction(self, txn, private_key):
+        return self._buildCreateContract(contract, build_transaction_parameters)
+
+    # create a new contract
+    def _buildCreateContract(self, contract, build_transaction_parameters):
+        return contract.constructor().buildTransaction(build_transaction_parameters)
+
+    # call a state changer function
+    def _buildTransactionFunction(
+        self, contract_function, build_transaction_parameters
+    ):
+        return contract_function.buildTransaction(build_transaction_parameters)
+
+    def signTransaction(self, txn, private_key):
         return self.w3.eth.account.sign_transaction(txn, private_key)
 
-    def SendRawTransaction(self, signed_txn):
+    def sendRawTransaction(self, signed_txn):
         sent_txn = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-        return self.w3.eth.wait_for_transaction_receipt(sent_txn)
+        receipt = self.w3.eth.wait_for_transaction_receipt(sent_txn)
+        self.incrementNonce()
+        return receipt
+
+    def callFunction(self, contract_function):
+        return contract_function.call()
