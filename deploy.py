@@ -1,83 +1,45 @@
+from itertools import chain
 from web3 import Web3
-import json
-
 import os
 from dotenv import load_dotenv
+import global_variables
+import json
 
 from ContractOps import ContractOps
 
 load_dotenv()
-contractOps = ContractOps("RINKEBY_RPC_URL")
 
-abi, bytecode = contractOps.compile("./SimpleContract.sol")
+try:
+    with open(
+        f"{global_variables.GLOBAL_COMPILATION_PATH}/compiled_abi.json", "r"
+    ) as file:
+        abi = file.read()
+
+    with open(
+        f"{global_variables.GLOBAL_COMPILATION_PATH}/compiled_bytecode.txt", "r"
+    ) as file:
+        bytecode = file.read()
+
+except FileNotFoundError:
+    raise FileNotFoundError(
+        "You need to compile first! To compile, you need to run: python compile.py"
+    )
 
 chain_id = int(os.getenv("CHAIN_ID"))
 my_address = os.getenv("MY_ADDRESS")
 private_key = os.getenv("PRIVATE_KEY")
 
-SimpleStorage = contractOps.createContract(abi, bytecode)
-
-contract_create_txn = contractOps.createTxn(
-    my_address,
-    chain_id=chain_id,
-    contract=SimpleStorage,
+contractOps = ContractOps(
+    "RINKEBY_RPC_URL", my_address=my_address, abi=abi, chain_id=chain_id
 )
 
-signed_contract_create_txn = contractOps.signTransaction(
-    contract_create_txn, private_key
+signed_contract_create_txn_hash_receipt = contractOps.createContract(
+    bytecode, private_key
 )
 
-signed_contract_create_txn_hash_receipt = contractOps.sendRawTransaction(
-    signed_contract_create_txn
+print("New Contract Transaction has been created!", end="\n\n")
+print(signed_contract_create_txn_hash_receipt, end="\n\n")
+print(
+    f"Contract Address: {signed_contract_create_txn_hash_receipt.contractAddress}",
+    end="\n\n",
 )
-
-# working with deployed contract
-
-deployed_contract = contractOps.createTxn(
-    from_address=my_address,
-    contract_address=signed_contract_create_txn_hash_receipt.contractAddress,
-    contract_abi=abi,
-)
-
-print(deployed_contract.functions.getInfoByName("Obi-Wan Kenobi").call())
-"""
-nonce += 1
-
-simple_storage_txn = simple_storage_contract.functions.addHero("Obi-Wan Kenobi", "Blue", 29).buildTransaction({
-    "chainId": chain_id,
-    "gasPrice": w3.eth.gas_price,
-    "nonce": nonce,
-    "from": my_address
-})
-
-signed_simple_storage_txn = w3.eth.account.sign_transaction(
-    simple_storage_txn, private_key)
-
-signed_simple_storage_txn_hash = w3.eth.send_raw_transaction(
-    signed_simple_storage_txn.rawTransaction)
-
-signed_simple_storage_txn_hash_receipt = w3.eth.wait_for_transaction_receipt(
-    signed_simple_storage_txn_hash)
-
-print(simple_storage_contract.functions.getInfoByName("Obi-Wan Kenobi").call())
-
-
-nonce += 1
-simple_storage_txn = simple_storage_contract.functions.addHero("Anakin Skywalker", "Green", 19).buildTransaction({
-    "chainId": chain_id,
-    "gasPrice": w3.eth.gas_price,
-    "nonce": nonce,
-    "from": my_address
-})
-
-signed_simple_storage_txn = w3.eth.account.sign_transaction(
-    simple_storage_txn, private_key)
-
-signed_simple_storage_txn_hash = w3.eth.send_raw_transaction(
-    signed_simple_storage_txn.rawTransaction)
-
-signed_simple_storage_txn_hash_receipt = w3.eth.wait_for_transaction_receipt(
-    signed_simple_storage_txn_hash)
-
-print(simple_storage_contract.functions.getInfoByName("Anakin Skywalker").call())
-"""

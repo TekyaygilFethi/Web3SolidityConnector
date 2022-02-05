@@ -8,7 +8,8 @@ struct Hero {
     uint256 age;
 }
 
-contract SimpleStorage {
+contract SimpleContract {
+    string name = "Fethi";
     mapping(string => uint256) nameToIndex;
     Hero[] heroes;
 
@@ -36,5 +37,9 @@ contract SimpleStorage {
     {
         uint256 idx = nameToIndex[name];
         return heroes[idx];
+    }
+
+    function getAllHeroes() public view returns (Hero[] memory) {
+        return heroes;
     }
 }
