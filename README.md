@@ -1,7 +1,7 @@
 # WebPy3 Solidity Connector
 
 
-With this project, you can compile your sol files and create new transactions including creating contract and calling the state changer functions.
+With this project, you can compile your sol files and create new transactions including creating contract and calling the state changer functions. You can integrate integrate your sol files with Python and you can call functions with using Python.
 
 # Program Life Cycle
 
