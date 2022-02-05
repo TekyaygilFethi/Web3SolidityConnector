@@ -42,22 +42,26 @@ MY_ADDRESS = "{YOUR ADDRESS}"
 CHAIN_ID = "{YOUR CHAIN ID}"
 ```
 
-3. After setting the .env file, to run the program, you first need to go to the project directory and run:
+3. Install the dependencies from requirements.txt file.
+```bash
+pip install -r /path/to/requirements.txt
+```
+4. After setting the .env file, to run the program, you first need to go to the project directory and run:
 
 ```bash
 python compile.py {YOUR_SOL_FILE} // python compile.py SimpleContract.sol
 ```
 ! Please note that your sol files must be in the folder `sol_files` folder by default or in the folder you specified custom in `global_variables.py` file by assigning to `GLOBAL_SOL_PATH`.
 
-4. After compilation you should see screen like this:
+5. After compilation you should see screen like this:
 ```bash
 Compilation folder created!
 Compiled successfully!
 ```
 
-5. When you check your folders, you can see `compilation_files_out` folder is created. If you changed the folder path and name from global_variables you may see different folder. This folder be based on when deploying your contracts and running your Solidity functions!
+6. When you check your folders, you can see `compilation_files_out` folder is created. If you changed the folder path and name from global_variables you may see different folder. This folder be based on when deploying your contracts and running your Solidity functions!
 
-6. For next step, you must deploy your compiled contract. To do this, you must run:
+7. For next step, you must deploy your compiled contract. To do this, you must run:
 
 ```bash
 python deploy.py
@@ -71,7 +75,7 @@ AttributeDict({'transactionHash': HexBytes('0x19f1237cd0bf13bf1112f7e60b9dd7570d
 Contract Address: 0x874E06Aff5a1031Bd5AE07100A7A518D0C72b8E2 //This address you should copy.
 ```
 
-7. Edit your main.py content according to your functions. For example, I have addHero function in my compiled Solidity:
+8. Edit your main.py content according to your functions. For example, I have addHero function in my compiled Solidity:
 ```c
 struct Hero {
     string name;
@@ -131,7 +135,7 @@ print(contract.functions.getInfoByName("Obi-Wan Kenobi").call())
 Please note that we had to use `.call()` at the end of the function call to gather response and make the function call.
 
 
-8. To run main.py file, you need to supply contract address. You should use the contracty address you copied at Step 6.
+9. To run main.py file, you need to supply contract address. You should use the contracty address you copied at Step 6.
 ```bash
 python main.py {ContractAddress}
 ```
