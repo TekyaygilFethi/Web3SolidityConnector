@@ -7,7 +7,7 @@ With this project, you can compile your sol files and create new transactions in
 
 1. Compile the Solidity(.sol) file
 2. Deploy the contract which is in Solidity file
-3. Manipulate the main.py file for calling and executing relevant functions in contract even with parameters via the help of WebPy3
+3. Manipulate the main.py file for calling and executing relevant functions in contract even with parameters via the help of Web3
 
 
 # Folder Structure
