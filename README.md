@@ -44,7 +44,7 @@ CHAIN_ID = "{YOUR CHAIN ID}"
 
 3. Install the dependencies from requirements.txt file.
 ```bash
-pip install -r /path/to/requirements.txt
+pip install -r requirements.txt
 ```
 4. After setting the .env file, to run the program, you first need to go to the project directory and run:
 
