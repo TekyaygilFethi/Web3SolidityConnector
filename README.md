@@ -123,12 +123,12 @@ function getAllHeroes() public view returns (Hero[] memory) {
         return heroes;
     }
 ```
-You can call the `getInfoByName` function like this:
+You can call the `getAllHeroes` function like this:
 ```python
-print(contract.functions.getInfoByName("Obi-Wan Kenobi").call())
+print(contract.functions.getAllHeroes().call())
 ```
 
-You can call the `getAllHeroes` function which takes parameter like this:
+You can call the `getInfoByName` function which takes parameter like this:
 ```python
 print(contract.functions.getInfoByName("Obi-Wan Kenobi").call())
 ```
